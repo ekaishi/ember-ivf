@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember — IVF Journey Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#FAF7F2; --warm-white:#FDF9F4; --blush:#E8C4B2; --blush-light:#F2DDD3;
+  --rose:#C4836A; --rose-deep:#A05C45; --sage:#8FA68A; --sage-light:#C8D9C4;
+  --gold:#C9A96E; --gold-light:#E8D4A8; --text:#2C2420; --text-mid:#6B5A53;
+  --text-light:#9A8880; --border:#E8DDD5; --success:#5A9A5A;
+  --shadow:0 2px 20px rgba(44,36,32,0.08); --shadow-lg:0 8px 40px rgba(44,36,32,0.12);
+  --euploid-bg:#D6EDD6; --euploid-border:#5A9A5A; --euploid-text:#2A6A2A;
+  --mosaic-bg:#D6E8F5; --mosaic-border:#4A7EB5; --mosaic-text:#1A4A7A;
+  --grey-bg:#EBEBEB; --grey-border:#AAAAAA;
+  --girl:#E8A0B4; --girl-light:#F7D6E2; --girl-deep:#B85A7A;
+  --boy:#7BAFD4;  --boy-light:#C8DFF0;  --boy-deep:#2A6A9A;
+  --unkn:#A890C8; --unkn-light:#DDD0F0; --unkn-deep:#6A4A9A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:256px;min-height:100vh;background:var(--warm-white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.main{margin-left:256px;flex:1;padding:36px 44px;max-width:980px;}
+
+.logo{padding:24px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--rose-deep);letter-spacing:.02em;}
+.logo-tag{font-size:10px;color:var(--text-light);letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+.nav{padding:14px 10px;flex:1;overflow-y:auto;}
+.nav-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-light);padding:8px 12px 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--text-mid);font-size:13.5px;transition:all .15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--blush-light);color:var(--rose-deep);}
+.nav-item.active{background:var(--blush-light);color:var(--rose-deep);font-weight:500;}
+
+/* ── VIEWS ── */
+.view{display:none!important;} .view.active{display:block!important;}
+.ph{margin-bottom:30px;}
+.ph-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:300;line-height:1.1;}
+.ph-title span{color:var(--rose);font-style:italic;}
+.ph-sub{color:var(--text-light);margin-top:5px;font-size:13px;}
+
+/* ── CARDS ── */
+.card{background:var(--warm-white);border:1px solid var(--border);border-radius:12px;padding:22px;box-shadow:var(--shadow);}
+.card-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--text);margin-bottom:14px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+
+/* ── STAT CARDS ── */
+.stat-card{background:var(--warm-white);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.stat-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-light);}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--rose-deep);line-height:1.1;margin-top:3px;}
+.stat-sub{font-size:11px;color:var(--text-light);margin-top:2px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--rose);color:#fff;} .btn-primary:hover{background:var(--rose-deep);}
+.btn-ghost{background:transparent;color:var(--rose);border:1.5px solid var(--blush);} .btn-ghost:hover{background:var(--blush-light);}
+.btn-sm{padding:5px 11px;font-size:12px;}
+
+/* ── FORMS ── */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:11.5px;font-weight:500;color:var(--text-mid);margin-bottom:5px;letter-spacing:.03em;}
+.fi,.fs,.fta{width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--cream);outline:none;transition:border-color .15s;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--rose);}
+.fta{resize:vertical;min-height:64px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* ── CF OPTIONS ── */
+.cf-opt{display:flex;align-items:center;gap:9px;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:5px;background:var(--cream);}
+.cf-opt:hover{border-color:var(--rose);}
+.cf-opt input{accent-color:var(--rose);width:15px;height:15px;flex-shrink:0;}
+.cf-opt label{font-size:12.5px;cursor:pointer;flex:1;}
+
+/* ── SEX SELECTOR ── */
+.sex-sel{display:flex;gap:7px;}
+.sex-btn{flex:1;padding:9px 6px;border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;background:var(--cream);color:var(--text-mid);transition:all .18s;line-height:1.3;}
+.sex-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);}
+.sex-btn.sel-girl{background:var(--girl-light);border-color:var(--girl);color:var(--girl-deep);}
+.sex-btn.sel-boy{background:var(--boy-light);border-color:var(--boy);color:var(--boy-deep);}
+.sex-btn.sel-unknown{background:var(--unkn-light);border-color:var(--unkn);color:var(--unkn-deep);}
+.sex-icon{font-size:18px;display:block;margin-bottom:2px;}
+
+/* ── BADGES & CHIPS ── */
+.sex-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.04em;}
+.sb-girl{background:var(--girl-light);color:var(--girl-deep);border:1px solid var(--girl);}
+.sb-boy{background:var(--boy-light);color:var(--boy-deep);border:1px solid var(--boy);}
+.cf-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.05em;padding:1px 5px;border-radius:3px;}
+.cf-affected{background:#FFE0D0;color:#A04030;border:1px solid #F0A090;}
+.cf-carrier{background:#FFF4D0;color:#806020;border:1px solid #E0C060;}
+.cf-unaffected{background:#E0F0E0;color:#306030;border:1px solid #80B080;}
+.pgt-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;}
+.pgt-normal{background:var(--euploid-bg);color:var(--euploid-text);border:1px solid var(--euploid-border);}
+.pgt-mosaic{background:var(--mosaic-bg);color:var(--mosaic-text);border:1px solid var(--mosaic-border);}
+.pgt-grey{background:var(--grey-bg);color:#666;border:1px solid var(--grey-border);}
+.pgt-gold{background:var(--gold-light);color:#7A5C20;}
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:500;}
+.chip-rose{background:var(--blush-light);color:var(--rose-deep);}
+.chip-sage{background:var(--sage-light);color:#2A6030;}
+.chip-gold{background:var(--gold-light);color:#7A5C20;}
+.badge-pill{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;font-size:10px;font-weight:600;background:var(--rose);color:#fff;}
+
+/* ── EMBRYO CARDS ── */
+.embryo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px;}
+.ec{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;background:var(--warm-white);text-align:center;position:relative;user-select:none;}
+.ec:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+.ec.ec-euploid{background:var(--euploid-bg);border-color:var(--euploid-border);}
+.ec.ec-mosaic{background:var(--mosaic-bg);border-color:var(--mosaic-border);}
+.ec.ec-grey{background:var(--grey-bg);border-color:var(--grey-border);opacity:.55;filter:grayscale(.6);}
+.ec.ec-transferred{background:var(--blush-light);border-color:var(--rose);}
+.ec-icon{font-size:24px;margin-bottom:4px;}
+.ec-id{font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:500;}
+.ec-sub{font-size:10px;color:var(--text-light);margin-top:2px;}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:10px 14px;background:var(--warm-white);border:1px solid var(--border);border-radius:8px;font-size:11.5px;align-items:center;}
+.ldot{width:12px;height:12px;border-radius:3px;border:2px solid;flex-shrink:0;}
+
+/* ── MODAL ── */
+.mo{display:none;position:fixed;inset:0;background:rgba(44,36,32,.42);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+.mo.open{display:flex;}
+.modal{background:var(--warm-white);border-radius:16px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;padding:28px 30px;box-shadow:var(--shadow-lg);}
+.mh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;}
+.mt{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--text);}
+.mc{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-light);line-height:1;padding:4px;}
+.ma{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;}
+
+/* ── METER ── */
+.meter-track{height:11px;background:var(--blush-light);border-radius:999px;overflow:hidden;}
+.meter-fill{height:100%;border-radius:999px;transition:width .9s cubic-bezier(.34,1.4,.64,1);}
+.meter-labels{display:flex;justify-content:space-between;margin-top:5px;font-size:9.5px;color:var(--text-light);padding:0 1px;}
+
+/* ── JOURNEY HEADER ── */
+.jh{border-radius:14px;padding:22px;margin-bottom:22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+
+/* ── VERTICAL TIMELINE ── */
+.tl-wrap{position:relative;padding-left:48px;}
+.tl-line{position:absolute;left:17px;top:0;bottom:0;width:3px;border-radius:2px;}
+.tl-item{position:relative;margin-bottom:12px;}
+.tl-dot{position:absolute;left:-39px;top:16px;width:20px;height:20px;border-radius:50%;border:2.5px solid;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all .25s;background:var(--warm-white);}
+.tl-timing{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;}
+.tl-card{border-radius:10px;padding:14px 16px;border:1.5px solid;transition:all .2s;}
+
+/* ── BOXES ── */
+.info-box{background:var(--blush-light);border:1px solid var(--blush);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--rose-deep);margin-top:10px;}
+.sage-box{background:var(--sage-light);border:1px solid var(--sage);border-radius:8px;padding:10px 14px;font-size:12px;color:#2A5A2A;line-height:1.6;}
+.warn-box{background:#FFF4D0;border:1px solid #E0C060;border-radius:8px;padding:10px 14px;font-size:12px;color:#806020;}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:56px 20px;color:var(--text-light);}
+.empty-icon{font-size:44px;margin-bottom:14px;opacity:.45;}
+.empty-title{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--text-mid);margin-bottom:7px;}
+.empty-desc{font-size:12.5px;max-width:300px;margin:0 auto 18px;}
+
+/* ── PROB TABLE ── */
+.prob-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.prob-row:last-child{border-bottom:none;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+::-webkit-scrollbar{width:5px;} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-name">Ember</div>
+      <div class="logo-tag">IVF Journey Tracker</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-lbl">Overview</div>
+      <div class="nav-item active" onclick="showView('dashboard')"><span>🌿</span> Dashboard</div>
+      <div class="nav-lbl">Embryos</div>
+      <div class="nav-item" onclick="showView('embryos')"><span>🔬</span> Embryo Library</div>
+      <div class="nav-lbl">Journey</div>
+      <div class="nav-item" onclick="showView('journey')"><span>✨</span> Active Journey</div>
+      <div class="nav-item" onclick="showView('probability')"><span>📈</span> Success Rates</div>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="view-dashboard" class="view active">
+      <div class="ph">
+        <div class="ph-title">Your <span>Journey</span></div>
+        <div class="ph-sub">A hopeful overview of where you are and where you're going.</div>
+      </div>
+      <div class="grid3" style="margin-bottom:20px">
+        <div class="stat-card"><div class="stat-lbl">Total Embryos</div><div class="stat-val" id="d-embryos">0</div><div class="stat-sub">Created</div></div>
+        <div class="stat-card"><div class="stat-lbl">Euploid Embryos</div><div class="stat-val" id="d-viable">0</div><div class="stat-sub">Chromosomally normal</div></div>
+        <div class="stat-card"><div class="stat-lbl">Active Journey</div><div class="stat-val" id="d-journey">—</div><div class="stat-sub" id="d-stage">No journey yet</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Success Likelihood</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+            <span style="font-size:12px;font-weight:500;color:var(--text-mid)">Live Birth Probability</span>
+            <span style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:var(--rose-deep)" id="d-pct">—</span>
+          </div>
+          <div class="meter-track"><div class="meter-fill" id="d-fill" style="width:0%;background:linear-gradient(90deg,var(--rose),var(--gold))"></div></div>
+          <div class="meter-labels"><span>Transfer</span><span>β-hCG</span><span>Heartbeat</span><span>8wk</span><span>12wk</span><span>20wk</span></div>
+          <div class="info-box" id="d-info">Begin a journey by selecting an embryo.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Recent Activity</div>
+          <div id="activity-log" style="font-size:12.5px;color:var(--text-light);font-style:italic">No activity yet. Add your first embryo to begin.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ EMBRYOS ═══ -->
+    <div id="view-embryos" class="view">
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div class="ph-title">Embryo <span>Library</span></div>
+          <div class="ph-sub">Click an embryo card to grey it out (not for transfer). ✏️ to edit.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openAddEmbryoModal()">+ Add Embryo</button>
+      </div>
+      <div class="legend">
+        <div style="display:flex;align-items:center;gap:6px"><div class="ldot" style="background:var(--euploid-bg);border-color:var(--euploid-border)"></div><span style="color:var(--euploid-text)">Euploid</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><div class="ldot" style="background:var(--mosaic-bg);border-color:var(--mosaic-border)"></div><span style="color:var(--mosaic-text)">Mosaic</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><div class="ldot" style="background:var(--grey-bg);border-color:var(--grey-border)"></div><span style="color:#777">Aneuploid / Not transferring</span></div>
+        <div style="display:flex;align-items:center;gap:6px"><div class="ldot" style="background:var(--blush-light);border-color:var(--rose)"></div><span style="color:var(--rose-deep)">Transferred</span></div>
+        <span style="margin-left:auto;font-size:10.5px;color:var(--text-light);font-style:italic">Click to toggle grey ↔ colour</span>
+      </div>
+      <div id="embryos-container"></div>
+    </div>
+
+    <!-- ═══ JOURNEY ═══ -->
+    <div id="view-journey" class="view">
+      <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-end">
+        <div>
+          <div class="ph-title">Hypothetical <span>Journeys</span></div>
+          <div class="ph-sub">Track each embryo's path side by side. Click a tab to switch.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openStartJourneyModal()">+ Add Embryo Journey</button>
+      </div>
+      <div id="journey-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px"></div>
+      <div id="journey-container"></div>
+    </div>
+
+    <!-- ═══ PROBABILITY ═══ -->
+    <div id="view-probability" class="view">
+      <div class="ph">
+        <div class="ph-title">Success <span>Rates</span></div>
+        <div class="ph-sub">What each milestone means for your chances — every step forward matters.</div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Live Birth Likelihood by Milestone</div>
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0;margin-bottom:6px">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-light);padding-bottom:8px;border-bottom:2px solid var(--border)">Milestone</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--euploid-text);padding:0 10px 8px;border-bottom:2px solid var(--euploid-border);text-align:center">Euploid</div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mosaic-text);padding:0 8px 8px;border-bottom:2px solid var(--mosaic-border);text-align:center">Mosaic<br><span style="font-weight:400;font-size:9px;text-transform:none">Low level</span></div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mosaic-text);opacity:.65;padding:0 8px 8px;border-bottom:2px solid var(--mosaic-border);text-align:center">Mosaic<br><span style="font-weight:400;font-size:9px;text-transform:none">High level</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0">
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">🌱 Transfer</div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">50–60%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">40–46%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">10–20%</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-light);grid-column:1/-1;padding-top:2px;padding-bottom:8px">AA grade reaches the top of each range. BB grade sits at the bottom. Based on your counselor's RMA data.</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">🩸 β-hCG positive <span style="font-size:10px;color:var(--text-light)">(Days 10–14)</span></div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~65%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~52%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~18%</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">🔵 Gestational Sac <span style="font-size:10px;color:var(--text-light)">(~Wk 5)</span></div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~73%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~60%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~25%</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">💓 Fetal Heartbeat <span style="font-size:10px;color:var(--text-light)">(Wk 6–7)</span></div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~82%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~72%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~55%</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:11px;color:var(--text-light);grid-column:1/-1;padding-bottom:8px">After a confirmed heartbeat, mosaic and euploid outcomes converge significantly.</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">🔊 8-Week Scan</div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~88%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~81%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~65%</div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">🌤 First Trimester <span style="font-size:10px;color:var(--text-light)">(Wk 12)</span></div>
+            <div style="padding:8px 10px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~93%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~88%</div>
+            <div style="padding:8px 8px;border-bottom:1px solid var(--border);font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~80%</div>
+            <div style="padding:8px 0;font-size:12px;color:var(--text-mid)">🌸 Anatomy Scan <span style="font-size:10px;color:var(--text-light)">(Wk 20)</span></div>
+            <div style="padding:8px 10px;font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--euploid-text);text-align:center">~98%</div>
+            <div style="padding:8px 8px;font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);text-align:center">~95%</div>
+            <div style="padding:8px 8px;font-family:'Cormorant Garamond',serif;font-size:19px;color:var(--mosaic-text);opacity:.65;text-align:center">~92%</div>
+          </div>
+          <div style="margin-top:12px;font-size:10.5px;color:var(--text-light);font-style:italic;line-height:1.6">Transfer percentages reflect your counselor's RMA-specific data. Post-heartbeat rates are based on published FET literature. Your personal number in the Journey tab accounts for your embryo's specific grade.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div class="card">
+            <div class="card-title">🧬 Cystic Fibrosis Inheritance</div>
+            <p style="font-size:12.5px;color:var(--text-mid);margin-bottom:12px">With <strong>both parents as CF carriers</strong>, each embryo has:</p>
+            <div class="prob-row"><span><span class="cf-badge cf-unaffected">✅ CF CLEAR</span> No mutations</span><span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--success)">25%</span></div>
+            <div class="prob-row"><span><span class="cf-badge cf-carrier">⚡ CF CARRIER</span> One mutation (healthy)</span><span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:#C9A96E">50%</span></div>
+            <div class="prob-row"><span><span class="cf-badge cf-affected">⚠️ CF AFFECTED</span> Two mutations</span><span style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--rose-deep)">25%</span></div>
+            <div class="warn-box" style="margin-top:10px">PGT-M identifies CF status before transfer so you can choose Clear or Carrier embryos.</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Grade & PGT Effect on Your Number</div>
+            <div style="font-size:11.5px;color:var(--text-mid);margin-bottom:12px;line-height:1.5">Each embryo's displayed % = <strong>PGT baseline</strong> + <strong>grade adjustment</strong>. So your HBBA euploid = 50% base + 8% (AA) = <strong>58%</strong>. Your XBAA mosaic-low = 38% + 8% = <strong>46%</strong>.</div>
+            <div class="prob-row"><span><span class="chip chip-sage">AA</span> Excellent</span><strong style="color:var(--success)">+8%</strong></div>
+            <div class="prob-row"><span><span class="chip chip-gold">AB / BA</span> Good</span><strong style="color:#C9A96E">+4%</strong></div>
+            <div class="prob-row"><span>BB — Fair</span><strong>Baseline (0%)</strong></div>
+            <div class="prob-row"><span>BC / CB</span><strong style="color:var(--rose)">−6%</strong></div>
+            <div class="prob-row"><span>CC — Poor</span><strong style="color:var(--rose-deep)">−12%</strong></div>
+            <div class="divider"></div>
+            <div class="prob-row"><span><span class="pgt-badge pgt-normal">✓ Euploid</span> BB baseline</span><strong style="color:var(--success)">50%</strong></div>
+            <div class="prob-row"><span><span class="pgt-badge pgt-mosaic">◑ Mosaic Low</span> BB baseline</span><strong style="color:var(--mosaic-text)">38%</strong></div>
+            <div class="prob-row"><span><span class="pgt-badge pgt-mosaic" style="opacity:.7">◑ Mosaic High</span> BB baseline</span><strong style="color:var(--mosaic-text);opacity:.7">12%</strong></div>
+            <div class="prob-row"><span><span class="pgt-badge pgt-grey">✗ Aneuploid</span></span><strong style="color:#999">~5% (not advised)</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════ MODALS ═══════════ -->
+
+<!-- ADD EMBRYO -->
+<div class="mo" id="m-embryo">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Embryo</div><button class="mc" onclick="closeModal('m-embryo')">×</button></div>
+    <div class="fg"><label class="fl">Embryo Label</label><input class="fi" id="e-label" placeholder="e.g. 1A, Embryo 3"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Day of Biopsy / Freeze</label>
+        <select class="fs" id="e-day"><option value="3">Day 3 (Cleavage)</option><option value="5" selected>Day 5 (Blast)</option><option value="6">Day 6 (Blast)</option><option value="7">Day 7 (Blast)</option></select></div>
+      <div class="fg"><label class="fl">Expansion <span style="font-weight:400;color:var(--text-light)">(RMA format)</span></label>
+        <select class="fs" id="e-exp">
+          <option value="EB">EB – Early Blastocyst</option>
+          <option value="B">B – Blastocyst</option>
+          <option value="XB">XB – Expanded Blastocyst</option>
+          <option value="HB" selected>HB – Hatching Blastocyst</option>
+          <option value="HD">HD – Hatched/Done</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">ICM Grade</label>
+        <select class="fs" id="e-icm"><option value="A" selected>A – Excellent</option><option value="B">B – Good</option><option value="C">C – Fair</option></select></div>
+      <div class="fg"><label class="fl">TE Grade</label>
+        <select class="fs" id="e-te"><option value="A" selected>A – Excellent</option><option value="B">B – Good</option><option value="C">C – Fair</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">PGT-A Result</label>
+        <select class="fs" id="e-pgt">
+          <option value="pending">Pending / Not tested</option>
+          <option value="euploid">Euploid (Chromosomally Normal)</option>
+          <option value="mosaic-low">Mosaic — Low Level (&lt;40% abnormal cells)</option>
+          <option value="mosaic-high">Mosaic — High Level (≥40% abnormal cells)</option>
+          <option value="aneuploid">Aneuploid (Abnormal)</option>
+        </select></div>
+      <div class="fg"><label class="fl">Status</label>
+        <select class="fs" id="e-status"><option value="frozen">Frozen (viable)</option><option value="failed">Did not survive</option></select></div>
+    </div>
+    <div class="fg">
+      <label class="fl" style="margin-bottom:8px">🧬 Cystic Fibrosis Status (PGT-M)</label>
+      <div class="cf-opt"><input type="radio" name="cf" id="cf-none" value="none" checked><label for="cf-none">Not tested / Unknown</label></div>
+      <div class="cf-opt" style="border-color:#80B080;background:#F0F8F0"><input type="radio" name="cf" id="cf-clear" value="unaffected"><label for="cf-clear" style="color:#306030">✅ CF Clear — no mutations</label></div>
+      <div class="cf-opt" style="border-color:#E0C060;background:#FFFBE8"><input type="radio" name="cf" id="cf-carrier" value="carrier"><label for="cf-carrier" style="color:#806020">⚡ CF Carrier — one mutation (healthy)</label></div>
+      <div class="cf-opt" style="border-color:#F0A090;background:#FFF0EE"><input type="radio" name="cf" id="cf-affected" value="affected"><label for="cf-affected" style="color:#A04030">⚠️ CF Affected — will have CF</label></div>
+    </div>
+    <div class="fg">
+      <label class="fl" style="margin-bottom:8px">⚧ Biological Sex <span style="font-weight:400;color:var(--text-light)">(optional — from PGT-A)</span></label>
+      <div class="sex-sel">
+        <div class="sex-btn sel-unknown" id="sex-btn-unknown" onclick="selectSex('unknown')"><span class="sex-icon">🔮</span>Unknown</div>
+        <div class="sex-btn" id="sex-btn-girl" onclick="selectSex('girl')"><span class="sex-icon">♀️</span>Girl (XX)</div>
+        <div class="sex-btn" id="sex-btn-boy" onclick="selectSex('boy')"><span class="sex-icon">♂️</span>Boy (XY)</div>
+      </div>
+      <input type="hidden" id="e-sex" value="unknown">
+    </div>
+    <div class="fg"><label class="fl">Notes <span style="font-weight:400;color:var(--text-light)">(optional)</span></label><textarea class="fta" id="e-notes" placeholder="Fragmentation, lab comments…"></textarea></div>
+    <div class="ma"><button class="btn btn-ghost" onclick="closeModal('m-embryo')">Cancel</button><button class="btn btn-primary" onclick="addEmbryo()">Save Embryo</button></div>
+  </div>
+</div>
+
+<!-- EDIT EMBRYO -->
+<div class="mo" id="m-edit-embryo">
+  <div class="modal">
+    <div class="mh"><div class="mt">Edit Embryo</div><button class="mc" onclick="closeModal('m-edit-embryo')">×</button></div>
+    <input type="hidden" id="ee-id">
+    <div class="fg"><label class="fl">Embryo Label</label><input class="fi" id="ee-label"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Day of Biopsy / Freeze</label>
+        <select class="fs" id="ee-day"><option value="3">Day 3</option><option value="5">Day 5</option><option value="6">Day 6</option><option value="7">Day 7</option></select></div>
+      <div class="fg"><label class="fl">Expansion</label>
+        <select class="fs" id="ee-exp">
+          <option value="EB">EB – Early Blastocyst</option>
+          <option value="B">B – Blastocyst</option>
+          <option value="XB">XB – Expanded Blastocyst</option>
+          <option value="HB">HB – Hatching Blastocyst</option>
+          <option value="HD">HD – Hatched/Done</option>
+        </select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">ICM Grade</label>
+        <select class="fs" id="ee-icm"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+      <div class="fg"><label class="fl">TE Grade</label>
+        <select class="fs" id="ee-te"><option value="A">A</option><option value="B">B</option><option value="C">C</option></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">PGT-A Result</label>
+        <select class="fs" id="ee-pgt">
+          <option value="pending">Pending / Not tested</option>
+          <option value="euploid">Euploid (Chromosomally Normal)</option>
+          <option value="mosaic-low">Mosaic — Low Level</option>
+          <option value="mosaic-high">Mosaic — High Level</option>
+          <option value="aneuploid">Aneuploid (Abnormal)</option>
+        </select></div>
+      <div class="fg"><label class="fl">Status</label>
+        <select class="fs" id="ee-status"><option value="frozen">Frozen (viable)</option><option value="failed">Did not survive</option></select></div>
+    </div>
+    <div class="fg">
+      <label class="fl" style="margin-bottom:8px">🧬 Cystic Fibrosis Status</label>
+      <div class="cf-opt"><input type="radio" name="ecf" id="ecf-none" value="none" checked><label for="ecf-none">Not tested / Unknown</label></div>
+      <div class="cf-opt" style="border-color:#80B080;background:#F0F8F0"><input type="radio" name="ecf" id="ecf-clear" value="unaffected"><label for="ecf-clear" style="color:#306030">✅ CF Clear</label></div>
+      <div class="cf-opt" style="border-color:#E0C060;background:#FFFBE8"><input type="radio" name="ecf" id="ecf-carrier" value="carrier"><label for="ecf-carrier" style="color:#806020">⚡ CF Carrier</label></div>
+      <div class="cf-opt" style="border-color:#F0A090;background:#FFF0EE"><input type="radio" name="ecf" id="ecf-affected" value="affected"><label for="ecf-affected" style="color:#A04030">⚠️ CF Affected</label></div>
+    </div>
+    <div class="fg">
+      <label class="fl" style="margin-bottom:8px">⚧ Biological Sex</label>
+      <div class="sex-sel">
+        <div class="sex-btn sel-unknown" id="esex-btn-unknown" onclick="selectEditSex('unknown')"><span class="sex-icon">🔮</span>Unknown</div>
+        <div class="sex-btn" id="esex-btn-girl" onclick="selectEditSex('girl')"><span class="sex-icon">♀️</span>Girl</div>
+        <div class="sex-btn" id="esex-btn-boy" onclick="selectEditSex('boy')"><span class="sex-icon">♂️</span>Boy</div>
+      </div>
+      <input type="hidden" id="ee-sex" value="unknown">
+    </div>
+    <div class="fg"><label class="fl">Notes</label><textarea class="fta" id="ee-notes"></textarea></div>
+    <div class="ma" style="justify-content:space-between">
+      <button class="btn btn-sm" onclick="deleteEmbryo(+document.getElementById('ee-id').value)" style="background:none;border:1.5px solid #E0A0A0;color:#A04040;border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer">🗑 Delete Embryo</button>
+      <div style="display:flex;gap:9px">
+        <button class="btn btn-ghost" onclick="closeModal('m-edit-embryo')">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditEmbryo()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- START JOURNEY -->
+<div class="mo" id="m-journey">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Embryo Journey</div><button class="mc" onclick="closeModal('m-journey')">×</button></div>
+    <div class="fg"><label class="fl">Select Embryo</label><select class="fs" id="j-emb"><option value="">— Choose an embryo —</option></select></div>
+    <div class="fg"><label class="fl">Transfer Type</label>
+      <select class="fs" id="j-type"><option value="FET">Frozen Embryo Transfer (FET)</option><option value="fresh">Fresh Transfer</option></select></div>
+    <div class="fg"><label class="fl">Notes <span style="font-weight:400;color:var(--text-light)">(optional)</span></label><textarea class="fta" id="j-notes" placeholder="Protocol, lining thickness, anything you want to note…"></textarea></div>
+    <div class="sage-box" style="margin-bottom:4px">✨ This journey is hypothetical — no dates needed. Mark milestones as you reach them to watch your success likelihood rise.</div>
+    <div class="ma"><button class="btn btn-ghost" onclick="closeModal('m-journey')">Cancel</button><button class="btn btn-primary" onclick="startJourney()">Begin Journey ✨</button></div>
+  </div>
+</div>
+
+<!-- MARK MILESTONE -->
+<div class="mo" id="m-milestone">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="ms-title">Mark Milestone</div><button class="mc" onclick="closeModal('m-milestone')">×</button></div>
+    <div id="ms-celebrate" class="sage-box" style="margin-bottom:16px"></div>
+    <div class="fg"><label class="fl">Pregnancy Week <span style="font-weight:400;color:var(--text-light)">(optional)</span></label><input type="number" class="fi" id="ms-week" placeholder="e.g. 6" min="1" max="42"></div>
+    <div class="fg"><label class="fl">Notes <span style="font-weight:400;color:var(--text-light)">(optional)</span></label><textarea class="fta" id="ms-notes" placeholder="Scan measurements, lab values, anything you want to remember…"></textarea></div>
+    <div class="ma"><button class="btn btn-ghost" onclick="closeModal('m-milestone')">Cancel</button><button class="btn btn-primary" onclick="saveMilestone()">✓ Mark Reached</button></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+const STORE_KEY='ember_data';
+let store={embryos:[],journeys:{},activity:[]};
+let activeJourneyId=null; // embryo id of the currently viewed journey
+
+function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify({embryos:store.embryos,journeys:store.journeys,activity:store.activity}));}catch(e){}}
+
+// ════════════════════════════════
+// NAV
+// ════════════════════════════════
+function showView(n){
+  // Hide all views explicitly
+  ['dashboard','embryos','journey','probability'].forEach(function(v){
+    var el=document.getElementById('view-'+v);
+    if(el){ el.classList.remove('active'); el.style.display='none'; }
+  });
+  // Show the target view
+  var target=document.getElementById('view-'+n);
+  if(target){ target.classList.add('active'); target.style.display='block'; }
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(function(i){
+    i.classList.toggle('active',!!(i.getAttribute('onclick')&&i.getAttribute('onclick').includes(n)));
+  });
+  // Render content
+  if(n==='dashboard') updateDashboard();
+  if(n==='embryos')   renderEmbryos();
+  if(n==='journey')   renderJourney();
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ════════════════════════════════
+// EMBRYOS
+// ════════════════════════════════
+function openAddEmbryoModal(){
+  document.querySelector('input[name="cf"][value="none"]').checked=true;
+  selectSex('unknown');
+  document.getElementById('e-label').value='';
+  document.getElementById('e-notes').value='';
+  document.getElementById('e-pgt').value='pending';
+  document.getElementById('e-status').value='frozen';
+  openModal('m-embryo');
+}
+
+function selectSex(v){
+  document.getElementById('e-sex').value=v;
+  ['unknown','girl','boy'].forEach(s=>document.getElementById('sex-btn-'+s).className='sex-btn'+(v===s?' sel-'+s:''));
+}
+function selectEditSex(v){
+  document.getElementById('ee-sex').value=v;
+  ['unknown','girl','boy'].forEach(s=>{const b=document.getElementById('esex-btn-'+s);if(b)b.className='sex-btn'+(v===s?' sel-'+s:'');});
+}
+
+function addEmbryo(){
+  const label=document.getElementById('e-label').value.trim();
+  if(!label){alert('Please enter an embryo label.');return;}
+  const icm=document.getElementById('e-icm').value;
+  const te=document.getElementById('e-te').value;
+  const pgt=document.getElementById('e-pgt').value;
+  store.embryos.push({
+    id:Date.now(),label,
+    day:+document.getElementById('e-day').value,
+    expansion:document.getElementById('e-exp').value,
+    icm,te,grade:icm+te,pgt,
+    cf:document.querySelector('input[name="cf"]:checked')?.value||'none',
+    sex:document.getElementById('e-sex').value||'unknown',
+    status:document.getElementById('e-status').value==='failed'?'failed':'frozen',
+    discarded:pgt==='aneuploid',
+    notes:document.getElementById('e-notes').value
+  });
+  logAct(`Added embryo ${label} (${icm+te}) — PGT: ${pgt}`);
+  persist();closeModal('m-embryo');
+  renderEmbryos();updateDashboard();
+}
+
+function openEditEmbryo(id){
+  const e=store.embryos.find(x=>x.id===id);if(!e)return;
+  document.getElementById('ee-id').value=id;
+  document.getElementById('ee-label').value=e.label;
+  document.getElementById('ee-day').value=e.day;
+  document.getElementById('ee-exp').value=e.expansion;
+  document.getElementById('ee-icm').value=e.icm;
+  document.getElementById('ee-te').value=e.te;
+  document.getElementById('ee-pgt').value=e.pgt;
+  document.getElementById('ee-status').value=e.status==='failed'?'failed':'frozen';
+  document.getElementById('ee-notes').value=e.notes||'';
+  document.querySelector(`input[name="ecf"][value="${e.cf||'none'}"]`).checked=true;
+  selectEditSex(e.sex||'unknown');
+  openModal('m-edit-embryo');
+}
+function saveEditEmbryo(){
+  const id=+document.getElementById('ee-id').value;
+  const e=store.embryos.find(x=>x.id===id);if(!e)return;
+  e.label=document.getElementById('ee-label').value.trim()||e.label;
+  e.day=+document.getElementById('ee-day').value;
+  e.expansion=document.getElementById('ee-exp').value;
+  e.icm=document.getElementById('ee-icm').value;
+  e.te=document.getElementById('ee-te').value;
+  e.grade=e.icm+e.te;
+  e.pgt=document.getElementById('ee-pgt').value;
+  e.cf=document.querySelector('input[name="ecf"]:checked')?.value||'none';
+  e.sex=document.getElementById('ee-sex').value||'unknown';
+  const st=document.getElementById('ee-status').value;
+  e.status=st==='failed'?'failed':'frozen';
+  e.discarded=e.pgt==='aneuploid';
+  e.notes=document.getElementById('ee-notes').value;
+  logAct(`Edited embryo ${e.label}`);persist();closeModal('m-edit-embryo');
+  renderEmbryos();updateDashboard();
+}
+
+function deleteEmbryo(id){
+  const e=store.embryos.find(x=>x.id===id);
+  if(!e)return;
+  if(!confirm('Delete Embryo '+e.label+'? This cannot be undone. Any journey for this embryo will also be removed.'))return;
+  store.embryos=store.embryos.filter(x=>x.id!==id);
+  // Remove any associated journey
+  if(store.journeys[id]){
+    delete store.journeys[id];
+    if(activeJourneyId===id) activeJourneyId=null;
+  }
+  logAct('Deleted embryo '+e.label);
+  persist();closeModal('m-edit-embryo');
+  renderEmbryos();updateDashboard();
+  if(document.getElementById('view-journey').style.display!=='none') renderJourney();
+}
+
+function toggleDiscard(id){
+  const e=store.embryos.find(x=>x.id===id);
+  if(!e||e.status==='failed')return;
+  e.discarded=!e.discarded;persist();renderEmbryos();
+}
+
+function renderEmbryos(){
+  const c=document.getElementById('embryos-container');
+  if(!store.embryos.length){
+    c.innerHTML='<div class="empty"><div class="empty-icon">🔬</div><div class="empty-title">No embryos yet</div><div class="empty-desc">Add your embryos with their grades, PGT results, and CF status.</div></div>';
+    return;
+  }
+  c.innerHTML='<div class="embryo-grid">'+store.embryos.map(embryoCard).join('')+'</div>';
+}
+
+function embryoCard(e){
+  // Colour by PGT status only — no "transferred" colouring since journey is hypothetical
+  var inJourney=!!store.journeys[e.id];
+  var cls='';
+  if(e.status==='failed'||e.discarded) cls='ec-grey';
+  else if(e.pgt==='euploid') cls='ec-euploid';
+  else if(e.pgt==='mosaic-low') cls='ec-mosaic';
+  else if(e.pgt==='mosaic-high') cls='ec-mosaic'; // same blue but faded via opacity
+  else if(e.pgt==='mosaic') cls='ec-mosaic';
+
+  var icon=e.status==='failed'?'❌':e.discarded?'🩶':inJourney?'🌱':'🔬';
+  var pgtIcon={euploid:'✓',aneuploid:'✗','mosaic-low':'◑','mosaic-high':'◑',mosaic:'◑',pending:'?'}[e.pgt]||'?';
+  var pgtShort={euploid:'euploid','mosaic-low':'mosaic-low','mosaic-high':'mosaic-high',mosaic:'mosaic',aneuploid:'aneuploid',pending:'pending'}[e.pgt]||e.pgt;
+  var cfHtml=e.cf&&e.cf!=='none'?'<div style="margin-top:3px"><span class="cf-badge cf-'+e.cf+'">'+(e.cf==='affected'?'⚠️CF':e.cf==='carrier'?'⚡CF+':'✅CF-')+'</span></div>':'';
+  var sexHtml=e.sex&&e.sex!=='unknown'?'<div style="margin-top:3px"><span class="sex-badge '+(e.sex==='girl'?'sb-girl':'sb-boy')+'">'+(e.sex==='girl'?'♀ Girl':'♂ Boy')+'</span></div>':'';
+  var journeyTag=inJourney?'<div style="font-size:9px;color:var(--rose-deep);margin-top:3px;font-weight:600;letter-spacing:.04em">IN JOURNEY</div>':'';
+  var notTag=e.discarded&&e.status!=='failed'?'<div style="font-size:9px;color:#999;margin-top:3px;font-style:italic">Not transferring</div>':'';
+  var clickable=e.status!=='failed';
+
+  return '<div class="ec '+cls+'" onclick="'+(clickable?'toggleDiscard('+e.id+')':'')+'" title="'+(clickable?(e.discarded?'Click to restore':'Click to grey out'):'')+'">'+
+    '<button onclick="event.stopPropagation();openEditEmbryo('+e.id+')" style="position:absolute;top:5px;right:5px;background:none;border:none;cursor:pointer;font-size:11px;opacity:.4;padding:2px;transition:opacity .15s" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.4" title="Edit">✏️</button>'+
+    '<div class="ec-icon">'+icon+'</div>'+
+    '<div class="ec-id">'+e.label+'</div>'+
+    '<div class="ec-sub">'+e.expansion+e.icm+e.te+' · Day '+e.day+'</div>'+
+    '<div class="ec-sub">PGT: '+pgtIcon+' '+pgtShort+'</div>'+
+    cfHtml+sexHtml+journeyTag+notTag+
+  '</div>';
+}
+
+// ════════════════════════════════
+// MILESTONES
+// pctE  = euploid live birth likelihood at this milestone
+// pctML = mosaic-low likelihood
+// pctMH = mosaic-high likelihood
+// pctLabel shown on timeline card (euploid range shown — actual % from calcPctFor)
+// ════════════════════════════════
+const MS=[
+  {id:'transfer',    icon:'🌱', label:'Embryo Transfer',         timing:'Day 0',      pctE:55, pctML:42, pctMH:15, pctLabel:'50–60%',
+   desc:'Your embryo has been placed. Euploid: 50–60% depending on grade. Mosaic-low: 40–46%. Mosaic-high: ~10–20%.',
+   celebrate:'Your embryo is where it needs to be. The wait begins, and so does the hope.'},
+  {id:'beta_hcg',   icon:'🩸', label:'Positive β-hCG',          timing:'Days 10–14', pctE:65, pctML:52, pctMH:22, pctLabel:'~65%',
+   desc:'A positive blood test — implantation has occurred. Your body has welcomed this embryo.',
+   celebrate:'✨ Positive β-hCG! Implantation confirmed. Your live birth likelihood has risen meaningfully.'},
+  {id:'sac',        icon:'🔵', label:'Gestational Sac Seen',     timing:'~Week 5',    pctE:73, pctML:60, pctMH:30, pctLabel:'~73%',
+   desc:'The sac is visible on ultrasound, confirming an intrauterine pregnancy. This is your baby\'s first home.',
+   celebrate:'💙 The sac is visible. Intrauterine pregnancy confirmed — your likelihood continues to climb.'},
+  {id:'heartbeat',  icon:'💓', label:'Fetal Heartbeat',          timing:'Week 6–7',   pctE:82, pctML:72, pctMH:55, pctLabel:'~82%',
+   desc:'Cardiac activity confirmed on ultrasound. One of the most significant and emotional milestones in any pregnancy.',
+   celebrate:'💓 A heartbeat! This single moment raises your live birth likelihood dramatically. After this, mosaic and euploid outcomes begin to converge.'},
+  {id:'week8',      icon:'🔊', label:'8-Week Ultrasound',        timing:'Week 8',     pctE:88, pctML:81, pctMH:65, pctLabel:'~88%',
+   desc:'Growth confirmed, measurements on track. Each passing week increases your confidence significantly.',
+   celebrate:'🌟 8 weeks and going strong. Your likelihood keeps climbing — the statistics are increasingly on your side.'},
+  {id:'trimester1', icon:'🌤', label:'First Trimester Complete', timing:'Week 12',    pctE:93, pctML:88, pctMH:80, pctLabel:'~93%',
+   desc:'12 weeks — the numbers shift dramatically. The pregnancy is well established.',
+   celebrate:'🌤 First trimester complete. The odds are overwhelmingly in your favour now.'},
+  {id:'week20',     icon:'🌸', label:'Anatomy Scan',             timing:'Week 20',    pctE:98, pctML:95, pctMH:92, pctLabel:'~98%',
+   desc:'A detailed scan at halfway. Almost everything that could unfold has unfolded beautifully.',
+   celebrate:'🌸 Halfway there, anatomy scan complete. You are so close to holding your baby.'},
+  {id:'birth',      icon:'👶', label:'Live Birth 🎉',            timing:'Week 38–40', pctE:100,pctML:100,pctMH:100,pctLabel:'100%',
+   desc:'Your baby is here.',
+   celebrate:'🎉 Congratulations. After everything — every injection, every wait, every quietly held hope — your baby is here.'}
+];
+
+let pendingMs=null;
+
+function openMsModal(id){
+  pendingMs=id;
+  const m=MS.find(x=>x.id===id);
+  document.getElementById('ms-title').textContent='Mark: '+m.label;
+  document.getElementById('ms-celebrate').textContent=m.celebrate;
+  document.getElementById('ms-week').value='';
+  document.getElementById('ms-notes').value='';
+  openModal('m-milestone');
+}
+function saveMilestone(){
+  if(!activeJourneyId||!pendingMs)return;
+  var j=store.journeys[activeJourneyId];
+  if(!j)return;
+  const week=document.getElementById('ms-week').value;
+  j.milestones[pendingMs]={outcome:'positive',week:week?+week:null,notes:document.getElementById('ms-notes').value};
+  const emb=store.embryos.find(e=>e.id===activeJourneyId);
+  const m=MS.find(x=>x.id===pendingMs);
+  logAct('✅ '+m.label+(week?' (Week '+week+')':'')+' — Embryo '+(emb?emb.label:''));
+  persist();closeModal('m-milestone');renderJourney();updateDashboard();
+}
+
+// ════════════════════════════════
+// JOURNEY
+// ════════════════════════════════
+function openStartJourneyModal(){
+  const viable=store.embryos.filter(function(e){ return e.status!=='failed'&&!e.discarded; });
+  if(!viable.length){alert('No viable embryos available. Add embryos or un-grey one first.');return;}
+  document.getElementById('j-emb').innerHTML=
+    '<option value="">— Choose an embryo —</option>'+
+    viable.map(function(e){
+      const hasJourney=!!store.journeys[e.id];
+      return '<option value="'+e.id+'">'+e.label+' · '+e.expansion+e.icm+e.te+' · PGT: '+e.pgt+(hasJourney?' (journey exists)':'')+'</option>';
+    }).join('');
+  openModal('m-journey');
+}
+
+function startJourney(){
+  const eid=+document.getElementById('j-emb').value;
+  if(!eid){alert('Please select an embryo.');return;}
+  const emb=store.embryos.find(function(e){return e.id===eid;});
+  if(!emb)return;
+  store.journeys[eid]={
+    embryoId:eid,
+    type:document.getElementById('j-type').value,
+    notes:document.getElementById('j-notes').value,
+    milestones:{},
+    startedAt:Date.now()
+  };
+  activeJourneyId=eid;
+  logAct('Started journey for Embryo '+emb.label);
+  persist();closeModal('m-journey');updateDashboard();showView('journey');
+}
+
+function removeJourney(eid){
+  if(!confirm('Remove journey for this embryo? Embryo data will not be affected.'))return;
+  delete store.journeys[eid];
+  const jIds=Object.keys(store.journeys);
+  activeJourneyId=jIds.length>0?+jIds[0]:null;
+  persist();renderJourney();updateDashboard();
+}
+
+function switchJourney(eid){
+  activeJourneyId=eid;
+  renderJourney();
+}
+
+function renderJourney(){
+  var c=document.getElementById('journey-container');
+  var tabsEl=document.getElementById('journey-tabs');
+  if(!c)return;
+
+  const jIds=Object.keys(store.journeys).map(Number);
+
+  // Render tabs
+  if(tabsEl){
+    if(jIds.length===0){
+      tabsEl.innerHTML='';
+    } else {
+      tabsEl.innerHTML=jIds.map(function(eid){
+        const emb=store.embryos.find(function(e){return e.id===eid;});
+        const isActive=eid===activeJourneyId;
+        const sex=(emb&&emb.sex&&emb.sex!=='unknown')?emb.sex:'unknown';
+        const tColor=sex==='girl'?'var(--girl-deep)':sex==='boy'?'var(--boy-deep)':'var(--unkn-deep)';
+        const tBg=sex==='girl'?'var(--girl-light)':sex==='boy'?'var(--boy-light)':'var(--unkn-light)';
+        const tBorder=sex==='girl'?'var(--girl)':sex==='boy'?'var(--boy)':'var(--unkn)';
+        const pct=calcPctFor(eid);
+        const style=isActive?
+          'background:'+tBg+';border:2px solid '+tBorder+';color:'+tColor+';font-weight:600;':
+          'background:var(--warm-white);border:2px solid var(--border);color:var(--text-mid);';
+        return '<div style="'+style+'padding:8px 14px;border-radius:10px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;transition:all .15s" onclick="switchJourney('+eid+')">'+
+          '<span>'+(emb?emb.label:'?')+'</span>'+
+          '<span style="font-family:\'Cormorant Garamond\',serif;font-size:18px;font-weight:400">'+pct+'%</span>'+
+          '<button onclick="event.stopPropagation();removeJourney('+eid+')" style="background:none;border:none;cursor:pointer;color:inherit;opacity:.5;font-size:14px;padding:0 0 0 2px;line-height:1" title="Remove journey">×</button>'+
+        '</div>';
+      }).join('');
+    }
+  }
+
+  if(jIds.length===0){
+    c.innerHTML='<div class="empty"><div class="empty-icon">✨</div><div class="empty-title">No journeys yet</div><div class="empty-desc">Add a hypothetical journey for any of your embryos to see how your success likelihood would rise through pregnancy.</div><button class="btn btn-primary" onclick="openStartJourneyModal()">Add First Journey</button></div>';
+    return;
+  }
+
+  // Make sure activeJourneyId is valid
+  if(!activeJourneyId||!store.journeys[activeJourneyId]){
+    activeJourneyId=jIds[0];
+  }
+
+  var j=store.journeys[activeJourneyId];
+  var emb=null;
+  for(var ei=0;ei<store.embryos.length;ei++){
+    if(store.embryos[ei].id===activeJourneyId){emb=store.embryos[ei];break;}
+  }
+
+  if(!emb){
+    c.innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Embryo not found</div><button class="btn btn-primary" onclick="removeJourney('+activeJourneyId+')">Remove Journey</button></div>';
+    return;
+  }
+
+  var pct=calcPctFor(activeJourneyId);
+  // Meter fill: only fill based on milestones actually reached
+  var meterWidth=0;
+  var lastReachedIdx=-1;
+  for(var mi=0;mi<MS.length;mi++){
+    if(j.milestones[MS[mi].id]&&j.milestones[MS[mi].id].outcome==='positive') lastReachedIdx=mi;
+  }
+  if(lastReachedIdx>=0){
+    // Map milestone index 0–7 to meter width 0–100
+    meterWidth=Math.round(((lastReachedIdx+1)/MS.length)*100);
+  }
+
+  var sex=(emb.sex&&emb.sex!=='unknown')?emb.sex:'unknown';
+  var Cmain  = sex==='girl'?'var(--girl)'  :sex==='boy'?'var(--boy)'  :'var(--unkn)';
+  var Clight = sex==='girl'?'var(--girl-light)':sex==='boy'?'var(--boy-light)':'var(--unkn-light)';
+  var Cdeep  = sex==='girl'?'var(--girl-deep)':sex==='boy'?'var(--boy-deep)' :'var(--unkn-deep)';
+  var Cgrad  = sex==='girl'?'linear-gradient(90deg,var(--girl),var(--girl-deep))'
+              :sex==='boy' ?'linear-gradient(90deg,var(--boy),var(--boy-deep))'
+                           :'linear-gradient(90deg,var(--unkn),var(--unkn-deep))';
+
+  var lastOk=-1;
+  for(var mi2=0;mi2<MS.length;mi2++){
+    if(j.milestones[MS[mi2].id]&&j.milestones[MS[mi2].id].outcome==='positive') lastOk=mi2;
+  }
+
+  var cfBadge='';
+  if(emb.cf&&emb.cf!=='none'){
+    cfBadge='<span class="cf-badge cf-'+emb.cf+'" style="font-size:10.5px;padding:2px 7px">'+(emb.cf==='affected'?'⚠️ CF Affected':emb.cf==='carrier'?'⚡ CF Carrier':'✅ CF Clear')+'</span>';
+  }
+  var sexBadge=sex!=='unknown'?'<span class="sex-badge '+(sex==='girl'?'sb-girl':'sb-boy')+'">'+(sex==='girl'?'♀ Girl':'♂ Boy')+'</span>':'';
+  var pgtBadge=emb.pgt==='euploid'     ?'<span class="pgt-badge pgt-normal" style="font-size:10.5px">✓ Euploid</span>'
+              :emb.pgt==='mosaic-low'  ?'<span class="pgt-badge pgt-mosaic" style="font-size:10.5px">◑ Mosaic — Low Level</span>'
+              :emb.pgt==='mosaic-high' ?'<span class="pgt-badge pgt-mosaic" style="font-size:10.5px;opacity:.75">◑ Mosaic — High Level</span>'
+              :emb.pgt==='mosaic'      ?'<span class="pgt-badge pgt-mosaic" style="font-size:10.5px">◑ Mosaic</span>':'';
+
+  var curMs  = lastOk>=0?MS[lastOk]:null;
+  var nextMs = (lastOk+1<MS.length)?MS[lastOk+1]:null;
+  var celebrateText = curMs?curMs.celebrate:'Journey started. Mark "Embryo Transfer" below when you\'re ready to begin tracking.';
+  var stageTitle    = curMs?(curMs.icon+' '+curMs.label):'🌱 Awaiting first milestone';
+  var stageDesc     = curMs?curMs.desc:'Mark each milestone as it happens to watch your live birth likelihood rise.';
+  var wkDisplay='';
+  if(curMs&&j.milestones[curMs.id]&&j.milestones[curMs.id].week) wkDisplay='Week '+j.milestones[curMs.id].week;
+  else if(curMs) wkDisplay=curMs.timing;
+  var wkBadge=wkDisplay?'<span style="background:'+Clight+';color:'+Cdeep+';border:1px solid '+Cmain+';padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:500">'+wkDisplay+'</span>':'';
+  var nextMsPct=nextMs?msPctFor(emb.pgt,emb.grade,lastOk+1):0;
+  var nextLine=nextMs?'<div style="margin-top:11px;padding-top:11px;border-top:1px solid var(--border);font-size:12px;color:var(--text-light)">Next: <strong style="color:'+Cdeep+'">'+nextMs.label+'</strong> ('+nextMs.timing+') → <strong style="color:'+Cdeep+'">~'+nextMsPct+'%</strong></div>':'';
+  var notesLine=j.notes?'<div style="margin-top:9px;font-size:11.5px;color:var(--text-light);font-style:italic">'+j.notes+'</div>':'';
+  var embryoGrade=(emb.expansion||'')+(emb.icm||'')+(emb.te||'')+' · Day '+(emb.day||'?')+' · PGT: '+(emb.pgt||'?')+' · '+j.type;
+  // Show the grade breakdown so it's always transparent
+  var gradeLabel='Grade: '+(emb.grade||'BB')+' (ICM: '+(emb.icm||'?')+', TE: '+(emb.te||'?')+')';
+  var basePctAtTransfer=msPctFor(emb.pgt,emb.grade,-1);
+  var pctBreakdown='Starting likelihood: ~'+basePctAtTransfer+'%'+(emb.grade&&emb.grade!=='BB'?' (grade '+emb.grade+' adjusted)':'');
+
+  // Milestone items
+  var msHtml='';
+  for(var ti=0;ti<MS.length;ti++){
+    var m=MS[ti];
+    var done  = !!(j.milestones[m.id]&&j.milestones[m.id].outcome==='positive');
+    var isNext= !done&&(lastOk===ti-1||(lastOk===-1&&ti===0));
+    var future= !done&&!isNext;
+    var opacity= (future&&ti>lastOk+1)?'0.45':'1';
+    var wkMs  = (j.milestones[m.id]&&j.milestones[m.id].week)?j.milestones[m.id].week:null;
+    var noteMs= (j.milestones[m.id]&&j.milestones[m.id].notes)?j.milestones[m.id].notes:'';
+    var tLabel= wkMs?('Week '+wkMs):m.timing;
+
+    // Compute this milestone's pct for THIS embryo specifically
+    var thisMsPct=msPctFor(emb.pgt, emb.grade, ti);
+    var thisPctLabel='~'+thisMsPct+'%';
+    // Transfer milestone: show the grade-adjusted starting range
+    if(ti===0) thisPctLabel='~'+thisMsPct+'%';
+
+    var dotBg    = done?Cmain:(isNext?'var(--warm-white)':'var(--cream)');
+    var dotBorder= (done||isNext)?Cmain:'var(--border)';
+    var dotShadow= isNext?('0 0 0 5px '+Clight):'none';
+    var cardBg   = done?Clight:'var(--warm-white)';
+    var cardBord = (done||isNext)?Cmain:'var(--border)';
+    var titleCol = done?Cdeep:'var(--text)';
+    var tCol     = (done||isNext)?Cdeep:'var(--text-light)';
+    var pctCol   = done?Cdeep:'var(--text-light)';
+    var actionBtn='';
+    if(done) actionBtn='<span style="background:'+Clight+';color:'+Cdeep+';border:1px solid '+Cmain+';padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600">✓ Reached</span>';
+    else if(isNext) actionBtn='<button class="btn btn-sm" style="background:'+Cmain+';color:#fff;border:none;white-space:nowrap" onclick="openMsModal(\''+m.id+'\')">Mark Reached ✓</button>';
+    msHtml+=
+      '<div class="tl-item" style="opacity:'+opacity+'">'+
+        '<div class="tl-dot" style="background:'+dotBg+';border-color:'+dotBorder+';box-shadow:'+dotShadow+';color:'+Cdeep+'">'+(done?'✓':'')+'</div>'+
+        '<div class="tl-timing" style="color:'+tCol+'">'+tLabel+'</div>'+
+        '<div class="tl-card" style="background:'+cardBg+';border-color:'+cardBord+'">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">'+
+            '<div style="flex:1;min-width:0">'+
+              '<div style="font-family:\'Cormorant Garamond\',serif;font-size:17px;font-weight:500;color:'+titleCol+';margin-bottom:3px">'+m.icon+' '+m.label+'</div>'+
+              '<div style="font-size:12px;color:var(--text-mid);line-height:1.5">'+m.desc+'</div>'+
+              (noteMs?'<div style="font-size:11px;color:var(--text-light);margin-top:4px;font-style:italic">'+noteMs+'</div>':'')+
+            '</div>'+
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'+
+              '<div style="font-family:\'Cormorant Garamond\',serif;font-size:26px;font-weight:300;line-height:1;color:'+pctCol+'">'+thisPctLabel+'</div>'+
+              actionBtn+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+  }
+
+  var html=
+    '<div class="jh" style="background:linear-gradient(135deg,'+Clight+' 0%,var(--cream) 65%);border:1.5px solid '+Cmain+'">'+
+      '<div style="font-size:40px">🌱</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:22px;font-weight:500">Embryo '+emb.label+'</div>'+
+        '<div style="font-size:12px;color:var(--text-light);margin-top:3px">'+embryoGrade+'</div>'+
+        '<div style="font-size:11px;color:var(--text-light);margin-top:2px;font-style:italic">'+pctBreakdown+'</div>'+
+        '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'+
+          pgtBadge+cfBadge+sexBadge+
+          '<span class="chip chip-rose" style="font-size:10px">Hypothetical Journey</span>'+
+          wkBadge+
+        '</div>'+
+      '</div>'+
+      '<div style="text-align:center;flex-shrink:0;padding-left:8px">'+
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:48px;font-weight:300;color:'+Cdeep+';line-height:1">'+pct+'%</div>'+
+        '<div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:.07em;margin-top:2px">live birth<br>likelihood</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="grid2" style="margin-bottom:18px">'+
+      '<div class="card" style="padding:16px">'+
+        '<div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);margin-bottom:10px">Progress</div>'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
+          '<div style="font-size:11px;color:var(--text-light);white-space:nowrap">At transfer</div>'+
+          '<div class="meter-track" style="flex:1;height:11px"><div class="meter-fill" style="width:'+meterWidth+'%;background:'+Cgrad+'"></div></div>'+
+          '<div style="font-size:11px;color:var(--text-light);white-space:nowrap">Birth</div>'+
+        '</div>'+
+        '<div style="font-size:11px;color:var(--text-light);text-align:center;margin-bottom:10px">'+
+          (lastOk>=0?('Reached: '+MS[lastOk].label+' → '+pct+'% likelihood'):'No milestones marked yet')+
+        '</div>'+
+        '<div style="font-size:12px;color:var(--text-mid);font-style:italic;line-height:1.6">'+celebrateText+'</div>'+
+      '</div>'+
+      '<div class="card" style="padding:16px">'+
+        '<div style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-mid);margin-bottom:8px">Current Stage</div>'+
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:18px;font-weight:500;color:'+Cdeep+'">'+stageTitle+'</div>'+
+        '<div style="font-size:12px;color:var(--text-light);margin-top:5px;line-height:1.5">'+stageDesc+'</div>'+
+        nextLine+notesLine+
+      '</div>'+
+    '</div>'+
+    '<div class="card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'+
+        '<div style="font-family:\'Cormorant Garamond\',serif;font-size:19px;font-weight:500;color:'+Cdeep+'">Pregnancy Timeline</div>'+
+        '<span style="font-size:11px;color:var(--text-light)">Mark each milestone as you reach it</span>'+
+      '</div>'+
+      '<div class="tl-wrap" id="tl-wrap">'+
+        '<div class="tl-line" id="tl-line-el"></div>'+
+        msHtml+
+      '</div>'+
+    '</div>';
+
+  c.innerHTML=html;
+
+  requestAnimationFrame(function(){
+    var lineEl=document.getElementById('tl-line-el');
+    var wrap=document.getElementById('tl-wrap');
+    if(!lineEl||!wrap)return;
+    var items=wrap.querySelectorAll('.tl-item');
+    if(!items.length)return;
+    var wrapTop=wrap.getBoundingClientRect().top;
+    var targetItem=items[lastOk>=0?lastOk:0];
+    var dot=targetItem?targetItem.querySelector('.tl-dot'):null;
+    if(!dot)return;
+    var dr=dot.getBoundingClientRect();
+    var fillPx=dr.top-wrapTop+dr.height/2;
+    var pctFill=lastOk>=0?Math.min(100,Math.max(2,(fillPx/(lineEl.offsetHeight||1))*100)):2;
+    lineEl.style.background='linear-gradient(to bottom,'+Cmain+' 0%,'+Cmain+' '+pctFill+'%,var(--border) '+pctFill+'%,var(--border) 100%)';
+  });
+}
+
+// ════════════════════════════════
+// CALC SUCCESS %
+// ════════════════════════════════
+
+// Returns the live birth % for a given embryo at a given milestone index.
+// milestoneIdx -1 = not yet started (same as Transfer row, index 0).
+// Grade adjustment applies ONLY at index 0/−1 (transfer baseline).
+// From index 1 onwards (implantation confirmed), biology drives the number.
+function msPctFor(pgt, grade, milestoneIdx){
+  // BB-grade baselines per milestone. Index matches MS array order.
+  // [Transfer, β-hCG, Sac, Heartbeat, 8wk, 12wk, 20wk, Birth]
+  var euploidPcts    = [50, 65, 73, 82, 88, 93, 98, 100];
+  var mosaicLowPcts  = [38, 52, 60, 72, 80, 88, 95, 100];
+  var mosaicHighPcts = [12, 18, 25, 55, 65, 80, 92, 100];
+  var mosaicPcts     = [30, 46, 55, 70, 78, 87, 94, 100]; // legacy
+
+  // Grade adjustment — only applies at the transfer stage (idx 0 or -1)
+  var gradeAdj=0;
+  var g=grade||'';
+  if     (g==='AA')            gradeAdj=  8;
+  else if(g==='AB'||g==='BA') gradeAdj=  4;
+  else if(g==='AC'||g==='CA') gradeAdj= -2;
+  else if(g==='BB')            gradeAdj=  0;
+  else if(g==='BC'||g==='CB') gradeAdj= -6;
+  else if(g==='CC')            gradeAdj= -12;
+
+  var arr = pgt==='euploid'     ? euploidPcts
+          : pgt==='mosaic-low'  ? mosaicLowPcts
+          : pgt==='mosaic-high' ? mosaicHighPcts
+          : pgt==='mosaic'      ? mosaicPcts
+          : pgt==='aneuploid'   ? [5,5,5,5,5,5,5,5]
+          :                       euploidPcts; // pending
+
+  var idx = milestoneIdx < 0 ? 0 : Math.min(milestoneIdx, arr.length-1);
+  var base = arr[idx];
+
+  // Apply grade adjustment only at transfer (idx 0)
+  if(idx === 0) base = Math.min(99, Math.max(1, base + gradeAdj));
+
+  return Math.min(99, base);
+}
+
+function calcPctFor(eid){
+  var j=store.journeys[eid];
+  if(!j)return 0;
+  var emb=store.embryos.find(function(e){return e.id===eid;});
+  var pgt=emb?emb.pgt:'pending';
+  var grade=emb?emb.grade:'';
+
+  // Find the last reached milestone index
+  var lastOk=-1;
+  for(var i=0;i<MS.length;i++){
+    if(j.milestones[MS[i].id]&&j.milestones[MS[i].id].outcome==='positive') lastOk=i;
+  }
+
+  return msPctFor(pgt, grade, lastOk);
+}
+
+// ════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════
+function updateDashboard(){
+  document.getElementById('d-embryos').textContent=store.embryos.length;
+  document.getElementById('d-viable').textContent=store.embryos.filter(e=>e.pgt==='euploid'&&e.status!=='failed').length;
+  const jIds=Object.keys(store.journeys).map(Number);
+  if(jIds.length>0){
+    var bestPct=0,bestLabel='';
+    jIds.forEach(function(eid){
+      var p=calcPctFor(eid);
+      var emb=store.embryos.find(function(e){return e.id===eid;});
+      if(p>bestPct){bestPct=p;bestLabel=emb?emb.label:'';}
+    });
+    document.getElementById('d-journey').textContent=jIds.length===1?bestLabel:jIds.length+' journeys';
+    document.getElementById('d-stage').textContent=jIds.length===1?'tracking':'Best: '+bestLabel+' ('+bestPct+'%)';
+    document.getElementById('d-pct').textContent=bestPct+'%';
+    document.getElementById('d-fill').style.width=bestPct+'%';
+    document.getElementById('d-info').textContent=jIds.length+' hypothetical '+(jIds.length===1?'journey':'journeys')+' active. Mark milestones to watch likelihood rise.';
+  }else{
+    document.getElementById('d-journey').textContent='—';
+    document.getElementById('d-stage').textContent='No journeys yet';
+    document.getElementById('d-pct').textContent='—';
+    document.getElementById('d-fill').style.width='0%';
+    document.getElementById('d-info').textContent='Add a journey to start tracking.';
+  }
+  const log=document.getElementById('activity-log');
+  if(store.activity.length){
+    log.innerHTML=store.activity.slice().reverse().slice(0,6)
+      .map(a=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-mid)">${a}</div>`).join('');
+  }
+}
+
+// ════════════════════════════════
+// HELPERS
+// ════════════════════════════════
+function logAct(msg){
+  const now=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  store.activity.push(`${now} — ${msg}`);
+}
+
+// ════════════════════════════════
+// INIT — must run last, after all
+// functions and MS array are defined
+// ════════════════════════════════
+(function init(){
+  try{
+    const s=JSON.parse(localStorage.getItem(STORE_KEY));
+    if(s){
+      store.embryos=s.embryos||[];
+      store.activity=s.activity||[];
+      // Migrate old single journey → new journeys map
+      if(s.journeys){
+        store.journeys=s.journeys;
+      } else if(s.journey&&s.journey.embryoId){
+        store.journeys[s.journey.embryoId]=s.journey;
+      }
+      // ── DATA MIGRATIONS ──
+      store.embryos.forEach(function(e){
+        // Reset any old 'transferred' status
+        if(e.status==='transferred') e.status='frozen';
+
+        // Fix old numeric expansion values → RMA letter codes
+        var expMap={'1':'EB','2':'EB','3':'B','4':'XB','5':'HB','6':'HD'};
+        if(e.expansion&&expMap[String(e.expansion)]) e.expansion=expMap[String(e.expansion)];
+
+        // Fix old plain 'mosaic' pgt — default to mosaic-low
+        // (user should edit to mosaic-high if applicable)
+        if(e.pgt==='mosaic') e.pgt='mosaic-low';
+
+        // Fix missing or blank ICM/TE — parse from grade if possible
+        if(!e.icm||e.icm.length!==1||!'ABC'.includes(e.icm)){
+          if(e.grade&&e.grade.length>=2&&'ABC'.includes(e.grade[0])&&'ABC'.includes(e.grade[1])){
+            e.icm=e.grade[0];
+            e.te=e.grade[1];
+          }
+        }
+
+        // Always recompute grade from icm+te to keep it consistent
+        if(e.icm&&e.te&&'ABC'.includes(e.icm)&&'ABC'.includes(e.te)){
+          e.grade=e.icm+e.te;
+        } else if(!e.grade){
+          e.grade='BB'; // safe fallback
+        }
+      });
+      persist();
+    }
+  }catch(e){}
+  // Set active journey to first existing one if any
+  const jIds=Object.keys(store.journeys);
+  if(jIds.length>0) activeJourneyId=+jIds[0];
+  updateDashboard();
+  showView('dashboard');
+})();
+</script>
+</body>
+</html>
